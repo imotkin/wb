@@ -1,0 +1,19 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - goconst
+    - govet
+    - ineffassign
+    - staticcheck
+    - testifylint
+    - unused
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - nilnil
+    - testifylint
+    - unparam
+    - rowserrcheck

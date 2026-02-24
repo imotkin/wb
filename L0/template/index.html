@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр заказа</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 32px;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 28px;
+            text-align: center;
+            color: #111827;
+        }
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .error {
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .loading {
+            color: #6b7280;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Просмотр заказа</h1>
+
+    <div class="input-group">
+        <input type="text" id="uuid" placeholder="Введите UUID заказа, например: 01eca16c-4d86-45ca-b743-61bac0f12522">
+        <button id="fetchBtn">Получить заказ</button>
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    const uuidInput = document.getElementById('uuid');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const resultDiv = document.getElementById('result');
+
+    fetchBtn.addEventListener('click', async () => {
+        const uuid = uuidInput.value.trim();
+        if (!uuid) {
+            resultDiv.innerHTML = '<div class="error">Пожалуйста, введите UUID заказа</div>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<div class="loading">Загрузка...</div>';
+        fetchBtn.disabled = true;
+
+        try {
+            const response = await fetch(`/order/${uuid}`);
+
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            displayOrder(data);
+        } catch (err) {
+            resultDiv.innerHTML = `<div class="error">Ошибка: ${err.message}</div>`;
+        } finally {
+            fetchBtn.disabled = false;
+        }
+    });
+
+    function displayOrder(order) {
+        let html = `
+        <h2>Заказ ${order.order_uid}</h2>
+        <table>
+          <tr><th>Поле</th><th>Значение</th></tr>
+          <tr><td>Номер трека</td><td>${escapeHtml(order.track_number)}</td></tr>
+          <tr><td>Дата создания</td><td>${new Date(order.date_created).toLocaleString('ru-RU')}</td></tr>
+          <tr><td>Локаль</td><td>${order.locale}</td></tr>
+          <tr><td>Клиент</td><td>${escapeHtml(order.customer_id)}</td></tr>
+          <tr><td>Служба доставки</td><td>${escapeHtml(order.delivery_service)}</td></tr>
+        </table>
+
+        <h3>Доставка</h3>
+        <table>
+          <tr><th>Поле</th><th>Значение</th></tr>
+          <tr><td>Имя</td><td>${escapeHtml(order.delivery.name)}</td></tr>
+          <tr><td>Телефон</td><td>${escapeHtml(order.delivery.phone)}</td></tr>
+          <tr><td>Город</td><td>${escapeHtml(order.delivery.city)}</td></tr>
+          <tr><td>Адрес</td><td>${escapeHtml(order.delivery.address)}</td></tr>
+          <tr><td>Индекс</td><td>${order.delivery.zip}</td></tr>
+          <tr><td>Email</td><td>${escapeHtml(order.delivery.email)}</td></tr>
+        </table>
+
+        <h3>Оплата</h3>
+        <table>
+          <tr><th>Поле</th><th>Значение</th></tr>
+          <tr><td>Транзакция</td><td>${order.payment.transaction}</td></tr>
+          <tr><td>Валюта</td><td>${order.payment.currency}</td></tr>
+          <tr><td>Сумма товаров</td><td>${order.payment.goods_total}</td></tr>
+          <tr><td>Стоимость доставки</td><td>${order.payment.delivery_cost}</td></tr>
+          <tr><td>Итого</td><td>${order.payment.amount}</td></tr>
+          <tr><td>Провайдер</td><td>${escapeHtml(order.payment.provider)}</td></tr>
+        </table>
+
+        <h3>Товары</h3>
+        <table>
+          <tr>
+            <th>Название</th>
+            <th>Бренд</th>
+            <th>Размер</th>
+            <th>Цена</th>
+            <th>Скидка</th>
+            <th>Итого</th>
+            <th>Статус</th>
+          </tr>
+      `;
+
+        order.items.forEach(item => {
+            html += `
+          <tr>
+            <td>${escapeHtml(item.name)}</td>
+            <td>${escapeHtml(item.brand)}</td>
+            <td>${escapeHtml(item.size)}</td>
+            <td>${item.price}</td>
+            <td>${item.sale}%</td>
+            <td>${item.total_price}</td>
+            <td>${item.status}</td>
+          </tr>
+        `;
+        });
+
+        html += `</table>`;
+        resultDiv.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+</script>
+</body>
+</html>

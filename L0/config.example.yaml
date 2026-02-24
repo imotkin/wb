@@ -1,0 +1,27 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+postgres:
+  database: orders
+  host: postgres
+  port: 5432
+  user: ilya
+  password: secret
+  mode_ssl: disable
+  migrations_dir: ./migrations
+logging:
+  format: text
+  level: info
+  output: stdout
+broker:
+  host: kafka
+  port: 29092
+  topic: orders
+  topic_dlq: orders-dlq
+  group_id: my-group
+  first_offset: true
+  interval: 10s
+web:
+  template_path: template/index.html
+cache:
+  size: 100
