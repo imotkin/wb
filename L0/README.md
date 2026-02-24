@@ -54,7 +54,9 @@ make up
 ```sh
 Доступные команды:
   make build       - сборка проекта
-  make run         - запуск проекта
+  make run         - локальный запуск проекта
+  make up          - запуск проекта в Docker
+  make down        - остановка проекта в Docker
   make test        - запуск тестов
   make cover       - запуск покрытия тестами в HTML
   make lint        - запуск линтера golangci-lint

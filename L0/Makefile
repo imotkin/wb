@@ -36,7 +36,7 @@ help:
 	@echo "  make up          - запуск проекта в Docker"
 	@echo "  make down        - остановка проекта в Docker"
 	@echo "  make test        - запуск тестов"
-	@echo "  make cover       - показать покрытие тестами в HTML"
+	@echo "  make cover       - запуск покрытия тестами в HTML"
 	@echo "  make lint        - запустить линтера golangci-lint"
 	@echo "  make tidy        - запуск проверки зависимостей"
 	@echo "  make all         - проверка линтера, запуск тестов и сборка проекта"
