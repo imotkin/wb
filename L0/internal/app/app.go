@@ -148,10 +148,5 @@ func Run() error {
 
 	s.Run(ctx, sub)
 
-	return server.New(
-		log,
-		r,
-		cfg.Server.Host,
-		cfg.Server.Port,
-	).Start(ctx)
+	return server.New(log, cfg.Server, r).Start(ctx)
 }

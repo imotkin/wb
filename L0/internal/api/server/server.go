@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
@@ -18,16 +17,14 @@ type Server struct {
 	log logger.Logger
 }
 
-func New(log logger.Logger, h http.Handler, host, port string) *Server {
-	addr := net.JoinHostPort(host, port)
-
+func New(log logger.Logger, cfg *Config, h http.Handler) *Server {
 	return &Server{
 		srv: &http.Server{
-			Addr:         addr,
+			Addr:         cfg.Addr(),
 			Handler:      h,
-			ReadTimeout:  time.Second * 10,
-			WriteTimeout: time.Second * 10,
-			IdleTimeout:  time.Second * 60,
+			ReadTimeout:  cfg.ReadTimeout,
+			WriteTimeout: cfg.WriteTimeout,
+			IdleTimeout:  cfg.IdleTimeout,
 		},
 		log: log.With("source", "server"),
 	}
@@ -42,7 +39,7 @@ func (s *Server) Start(ctx context.Context) error {
 		err := s.srv.ListenAndServe()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			s.log.Info("server", "error", err)
-			return err
+			return fmt.Errorf("start server listening: %w", err)
 		}
 
 		return nil
