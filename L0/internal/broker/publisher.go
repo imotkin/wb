@@ -24,7 +24,7 @@ func NewPublisher(log logger.Logger, cfg *Config) (*Publisher, error) {
 		kgo.DefaultProduceTopic(cfg.Topic),
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create kafka writer: %w", err)
 	}
 
 	return &Publisher{
@@ -48,7 +48,7 @@ func (p *Publisher) Publish(ctx context.Context, key string, value any) (int, er
 	)
 
 	if err := r.FirstErr(); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("publish message: %w", err)
 	}
 
 	return len(bytes), nil
