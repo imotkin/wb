@@ -37,7 +37,7 @@ func (p *Postgres) MigrateUp(ctx context.Context, path string) error {
 
 	err := goose.SetDialect("postgres")
 	if err != nil {
-		return err
+		return fmt.Errorf("set database dialect: %w", err)
 	}
 
 	db := stdlib.OpenDBFromPool(p.pool)
@@ -51,7 +51,7 @@ func (p *Postgres) MigrateDown(ctx context.Context, path string) error {
 
 	err := goose.SetDialect("postgres")
 	if err != nil {
-		return err
+		return fmt.Errorf("set database dialect: %w", err)
 	}
 
 	db := stdlib.OpenDBFromPool(p.pool)
@@ -82,13 +82,13 @@ func (p *Postgres) List(ctx context.Context) ([]entity.Order, error) {
 		IsoLevel:   pgx.RepeatableRead,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
 	rows, err := tx.Query(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("run orders query: %w", err)
 	}
 
 	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (order entity.Order, err error) {
@@ -110,7 +110,7 @@ func (p *Postgres) List(ctx context.Context) ([]entity.Order, error) {
 
 		err = rows.Scan(fields...)
 		if err != nil {
-			return entity.Order{}, err
+			return entity.Order{}, fmt.Errorf("scan order fields: %w", err)
 		}
 
 		return order, nil
@@ -162,7 +162,7 @@ func (p *Postgres) GetOrder(ctx context.Context, id uuid.UUID) (entity.Order, er
 			return entity.Order{}, entity.ErrOrderNotFound
 		}
 
-		return entity.Order{}, err
+		return entity.Order{}, fmt.Errorf("run order query: %w", err)
 	}
 
 	itemsQuery := `
@@ -172,18 +172,23 @@ func (p *Postgres) GetOrder(ctx context.Context, id uuid.UUID) (entity.Order, er
 
 	rows, err := tx.Query(ctx, itemsQuery, order.UID)
 	if err != nil {
-		return entity.Order{}, err
+		return entity.Order{}, fmt.Errorf("run items query: %w", err)
 	}
 	defer rows.Close()
 
 	items, err := pgx.CollectRows(rows, pgx.RowToStructByPos[entity.Item])
 	if err != nil {
-		return entity.Order{}, err
+		return entity.Order{}, fmt.Errorf("collect order items: %w", err)
 	}
 
 	order.Items = items
 
-	return order, tx.Commit(ctx)
+	err = tx.Commit(ctx)
+	if err != nil {
+		return entity.Order{}, fmt.Errorf("commit transaction: %w", err)
+	}
+
+	return order, nil
 }
 
 func (p *Postgres) AddOrder(ctx context.Context, order entity.Order) (bool, error) {
@@ -192,7 +197,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order entity.Order) (bool, erro
 		IsoLevel:   pgx.ReadCommitted,
 	})
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -224,7 +229,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order entity.Order) (bool, erro
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("commit transaction: %w", err)
 	}
 
 	return true, nil

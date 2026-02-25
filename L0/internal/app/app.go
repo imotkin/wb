@@ -119,7 +119,7 @@ func Run() error {
 
 	pg, err := postgres.New(ctx, cfg.Postgres.ConnectionURL())
 	if err != nil {
-		return err
+		return fmt.Errorf("create postgres: %w", err)
 	}
 
 	err = pg.MigrateUp(ctx, cfg.Postgres.MigrationsDir)
