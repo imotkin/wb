@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 
@@ -38,7 +39,7 @@ func (s *OrderService) Get(ctx context.Context, id uuid.UUID) (entity.Order, err
 
 	order, err := s.repo.GetOrder(ctx, id)
 	if err != nil {
-		return entity.Order{}, err
+		return entity.Order{}, fmt.Errorf("get from repository: %w", err)
 	}
 
 	s.cache.Set(id, order)

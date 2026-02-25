@@ -26,7 +26,7 @@ func (c *Config) Validate() error {
 
 				info, err := os.Stat(path)
 				if err != nil {
-					return err
+					return fmt.Errorf("get file info: %w", err)
 				}
 
 				parts := strings.Split(info.Name(), ".")
