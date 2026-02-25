@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -91,13 +90,8 @@ func (p *Postgres) List(ctx context.Context) ([]entity.Order, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var orders []entity.Order
-	var order entity.Order
-	var itemsJSON []byte
-
-	for rows.Next() {
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (order entity.Order, err error) {
 		fields := []any{
 			&order.UID, &order.TrackNumber, &order.Entry, &order.Locale, &order.InternalSignature,
 			&order.CustomerID, &order.DeliveryService, &order.ShardKey, &order.SmID,
@@ -111,27 +105,16 @@ func (p *Postgres) List(ctx context.Context) ([]entity.Order, error) {
 			&order.Payment.Bank, &order.Payment.DeliveryCost, &order.Payment.GoodsTotal,
 			&order.Payment.CustomFee,
 
-			&itemsJSON,
+			&order.Items,
 		}
 
 		err = rows.Scan(fields...)
 		if err != nil {
-			return nil, err
+			return entity.Order{}, err
 		}
 
-		err = json.Unmarshal(itemsJSON, &order.Items)
-		if err != nil {
-			return nil, fmt.Errorf("decode order items: %w", err)
-		}
-
-		orders = append(orders, order)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return orders, nil
+		return order, nil
+	})
 }
 
 func (p *Postgres) GetOrder(ctx context.Context, id uuid.UUID) (entity.Order, error) {

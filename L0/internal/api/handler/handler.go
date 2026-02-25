@@ -51,6 +51,20 @@ func (h *Handler) GetOrder() http.Handler {
 	})
 }
 
+func (h *Handler) GetList() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		metrics.IncRequests()
+
+		orders, err := h.s.List(r.Context())
+		if err != nil {
+			h.error(w, "failed to get orders list", http.StatusInternalServerError, err)
+			return
+		}
+
+		h.response(w, orders, http.StatusOK)
+	})
+}
+
 func (h *Handler) IndexPage(templatePath string) http.Handler {
 	tmpl := template.Must(template.ParseFiles(templatePath))
 

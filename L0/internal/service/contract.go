@@ -11,4 +11,5 @@ import (
 type Service interface {
 	Add(ctx context.Context, order entity.Order) (bool, error)
 	Get(ctx context.Context, id uuid.UUID) (entity.Order, error)
+	List(ctx context.Context) ([]entity.Order, error)
 }

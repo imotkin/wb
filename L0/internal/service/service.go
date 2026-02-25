@@ -46,6 +46,10 @@ func (s *OrderService) Get(ctx context.Context, id uuid.UUID) (entity.Order, err
 	return order, nil
 }
 
+func (s *OrderService) List(ctx context.Context) ([]entity.Order, error) {
+	return s.repo.List(ctx)
+}
+
 func (s *OrderService) Add(ctx context.Context, order entity.Order) (bool, error) {
 	return s.repo.AddOrder(ctx, order)
 }

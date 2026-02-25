@@ -11,6 +11,7 @@ func New(h *handler.Handler, templatePath string) *http.ServeMux {
 	r := http.NewServeMux()
 
 	r.Handle("GET /order/{id}", h.GetOrder())
+	r.Handle("GET /orders", h.GetList())
 	r.Handle("GET /search", h.IndexPage(templatePath))
 	r.Handle("/metrics", metrics.Handler())
 
