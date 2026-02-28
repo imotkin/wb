@@ -14,7 +14,7 @@ type metrics struct {
 	gauges   map[string]prometheus.Gauge
 }
 
-func New(log logger.Logger, endpoints ...Endpoint) (Metrics, error) {
+func New(log logger.Logger) (Metrics, error) {
 	counters := map[string]prometheus.Counter{
 		"RequestsTotal": promauto.NewCounter(prometheus.CounterOpts{
 			Name: "requests_total",
