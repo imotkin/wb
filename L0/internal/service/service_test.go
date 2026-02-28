@@ -11,6 +11,7 @@ import (
 	"github.com/imotkin/L0/internal/cache"
 	"github.com/imotkin/L0/internal/entity"
 	"github.com/imotkin/L0/internal/logger"
+	"github.com/imotkin/L0/internal/metrics"
 	"github.com/imotkin/L0/internal/repo"
 )
 
@@ -21,10 +22,12 @@ func TestGetFromCache(t *testing.T) {
 		expected = entity.Order{UID: id}
 		repo     = repo.NewMockRepository(ctrl)
 		cache    = cache.NewMockCache[uuid.UUID, entity.Order](ctrl)
-		service  = New(logger.NewNoOp(), repo, cache)
+		mc       = metrics.NewMockMetrics(ctrl)
+		service  = New(logger.NewNoOp(), repo, cache, mc)
 	)
 
 	cache.EXPECT().Get(id).Return(entity.Order{UID: id}, true)
+	mc.EXPECT().IncCacheGet()
 
 	got, err := service.Get(context.Background(), id)
 
@@ -39,12 +42,18 @@ func TestGetFromRepository(t *testing.T) {
 		expected = entity.Order{UID: id}
 		repo     = repo.NewMockRepository(ctrl)
 		cache    = cache.NewMockCache[uuid.UUID, entity.Order](ctrl)
-		service  = New(logger.NewNoOp(), repo, cache)
+		mc       = metrics.NewMockMetrics(ctrl)
+		service  = New(logger.NewNoOp(), repo, cache, mc)
 	)
 
 	cache.EXPECT().Get(id).Return(entity.Order{}, false)
+	mc.EXPECT().IncCacheGet()
+
 	repo.EXPECT().GetOrder(gomock.Any(), id).Return(entity.Order{UID: id}, nil)
+	mc.EXPECT().IncPostgresGet()
+
 	cache.EXPECT().Set(id, entity.Order{UID: id}).Return()
+	mc.EXPECT().IncCacheSet()
 
 	got, err := service.Get(context.Background(), id)
 
@@ -58,13 +67,17 @@ func TestOrderNotFound(t *testing.T) {
 		id      = uuid.New()
 		repo    = repo.NewMockRepository(ctrl)
 		cache   = cache.NewMockCache[uuid.UUID, entity.Order](ctrl)
-		service = New(logger.NewNoOp(), repo, cache)
+		mc      = metrics.NewMockMetrics(ctrl)
+		service = New(logger.NewNoOp(), repo, cache, mc)
 	)
 
 	cache.EXPECT().Get(id).Return(entity.Order{}, false)
+	mc.EXPECT().IncCacheGet()
+
 	repo.EXPECT().GetOrder(gomock.Any(), id).Return(entity.Order{}, entity.ErrOrderNotFound)
+	mc.EXPECT().IncPostgresGet()
 
 	_, err := service.Get(context.Background(), id)
 
-	require.Equal(t, err, entity.ErrOrderNotFound)
+	require.ErrorIs(t, err, entity.ErrOrderNotFound)
 }

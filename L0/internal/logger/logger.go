@@ -95,7 +95,8 @@ func New(format Format, level Level, w io.Writer) Logger {
 	}
 
 	return &logger{
-		l: slog.New(handler),
+		l:     slog.New(handler),
+		level: level,
 	}
 }
 

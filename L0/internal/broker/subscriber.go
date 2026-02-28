@@ -18,9 +18,10 @@ type Subscriber[T validation.Validatable] struct {
 	dlq    *kgo.Client
 	values chan T
 	log    logger.Logger
+	mc     metrics.Metrics
 }
 
-func NewConsumer[T validation.Validatable](log logger.Logger, cfg *Config) (*Subscriber[T], error) {
+func NewSubscriber[T validation.Validatable](log logger.Logger, cfg *Config, mc metrics.Metrics) (*Subscriber[T], error) {
 	reader, err := kgo.NewClient(
 		kgo.SeedBrokers(cfg.Endpoint()),
 		kgo.ConsumeTopics(cfg.Topic),
@@ -45,6 +46,7 @@ func NewConsumer[T validation.Validatable](log logger.Logger, cfg *Config) (*Sub
 		dlq:    writer,
 		values: make(chan T, 10),
 		log:    log.With("source", "kafka-subscriber"),
+		mc:     mc,
 	}, nil
 }
 
@@ -120,7 +122,7 @@ func (c *Subscriber[T]) sendDLQ(ctx context.Context, record *kgo.Record) {
 
 	c.log.Info("message was sent to dlq")
 
-	metrics.IncFailed()
+	c.mc.IncFailed()
 }
 
 func (c *Subscriber[T]) Close() {
@@ -128,4 +130,8 @@ func (c *Subscriber[T]) Close() {
 	c.dlq.Close()
 	close(c.values)
 	c.log.Info("subscriber was stopped")
+}
+
+func (c *Subscriber[T]) Ping(ctx context.Context) error {
+	return c.r.Ping(ctx)
 }

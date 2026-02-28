@@ -336,3 +336,7 @@ func (p *Postgres) addPayment(ctx context.Context, tx pgx.Tx, orderID uuid.UUID,
 
 	return err
 }
+
+func (p *Postgres) Ping(ctx context.Context) error {
+	return p.pool.Ping(ctx)
+}

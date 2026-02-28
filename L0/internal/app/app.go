@@ -18,7 +18,9 @@ import (
 	"github.com/imotkin/L0/internal/cache"
 	"github.com/imotkin/L0/internal/config"
 	"github.com/imotkin/L0/internal/entity"
+	"github.com/imotkin/L0/internal/healthcheck"
 	"github.com/imotkin/L0/internal/logger"
+	"github.com/imotkin/L0/internal/metrics"
 	"github.com/imotkin/L0/internal/repo/postgres"
 	"github.com/imotkin/L0/internal/service"
 )
@@ -127,6 +129,11 @@ func Run() error {
 		return fmt.Errorf("run migrations: %w", err)
 	}
 
+	m, err := metrics.New(log)
+	if err != nil {
+		return fmt.Errorf("create metrics client: %w", err)
+	}
+
 	pub, err := broker.NewPublisher(log, cfg.Broker)
 	if err != nil {
 		return fmt.Errorf("create producer: %w", err)
@@ -134,15 +141,17 @@ func Run() error {
 
 	pub.IntervalPublish(ctx, TestOrder, cfg.Broker.Interval)
 
-	sub, err := broker.NewConsumer[entity.Order](log, cfg.Broker)
+	sub, err := broker.NewSubscriber[entity.Order](log, cfg.Broker, m)
 	if err != nil {
 		return fmt.Errorf("create producer: %w", err)
 	}
 
+	go healthcheck.Run(ctx, time.Second*10, sub, pg, m)
+
 	var (
 		c = cache.New[uuid.UUID, entity.Order](cfg.Cache.Size)
-		s = service.New(log, pg, c)
-		h = handler.New(log, s)
+		s = service.New(log, pg, c, m)
+		h = handler.New(log, s, m)
 		r = router.New(h, cfg.Web.TemplatePath)
 	)
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestErrorResponse(t *testing.T) {
-	h := New(logger.NewNoOp(), nil)
+	h := New(logger.NewNoOp(), nil, nil)
 
 	cases := []struct {
 		message string
@@ -59,7 +59,7 @@ func TestErrorResponse(t *testing.T) {
 }
 
 func TestResponse(t *testing.T) {
-	h := New(logger.NewNoOp(), nil)
+	h := New(logger.NewNoOp(), nil, nil)
 
 	cases := []struct {
 		body     any

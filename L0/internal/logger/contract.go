@@ -10,10 +10,12 @@ type Logger interface {
 	Warn(msg string, args ...any)
 	Error(err error, msg string, args ...any)
 	With(args ...any) Logger
+	Level() Level
 }
 
 type logger struct {
-	l *slog.Logger
+	l     *slog.Logger
+	level Level
 }
 
 func (l *logger) Debug(msg string, args ...any) {
@@ -37,5 +39,9 @@ func (l *logger) Error(err error, msg string, args ...any) {
 }
 
 func (l *logger) With(args ...any) Logger {
-	return &logger{l.l.With(args...)}
+	return &logger{l: l.l.With(args...), level: l.level}
+}
+
+func (l *logger) Level() Level {
+	return l.level
 }

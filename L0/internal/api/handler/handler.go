@@ -17,15 +17,16 @@ import (
 type Handler struct {
 	s   service.Service
 	log logger.Logger
+	mc  metrics.Metrics
 }
 
-func New(log logger.Logger, s service.Service) *Handler {
-	return &Handler{s: s, log: log.With("source", "handler")}
+func New(log logger.Logger, s service.Service, mc metrics.Metrics) *Handler {
+	return &Handler{s: s, log: log.With("source", "handler"), mc: mc}
 }
 
 func (h *Handler) GetOrder() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		metrics.IncRequests()
+		h.mc.IncRequests()
 
 		id, err := uuid.Parse(r.PathValue("id"))
 		if err != nil {
@@ -53,7 +54,7 @@ func (h *Handler) GetOrder() http.Handler {
 
 func (h *Handler) GetList() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		metrics.IncRequests()
+		h.mc.IncRequests()
 
 		orders, err := h.s.List(r.Context())
 		if err != nil {
