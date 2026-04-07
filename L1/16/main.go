@@ -20,7 +20,7 @@ func quickSort(nums []int) []int {
 
 	var less, equal, more []int
 
-	pivot := nums[0]
+	pivot := nums[len(nums)/2]
 
 	for _, v := range nums {
 		switch {
@@ -33,7 +33,7 @@ func quickSort(nums []int) []int {
 		}
 	}
 
-	return slices.Concat(quickSort(less), quickSort(equal), quickSort(more))
+	return slices.Concat(quickSort(less), equal, quickSort(more))
 }
 
 func main() {
