@@ -16,11 +16,11 @@ import (
 	"slices"
 )
 
-func unique[T cmp.Ordered](nums ...T) map[T]struct{} {
+func unique[T cmp.Ordered](v ...T) map[T]struct{} {
 	m := make(map[T]struct{})
 
-	for _, n := range nums {
-		m[n] = struct{}{}
+	for _, t := range v {
+		m[t] = struct{}{}
 	}
 
 	return m
