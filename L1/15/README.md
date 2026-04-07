@@ -27,7 +27,7 @@ func main() {
 
 Для этого есть несколько способов:
 
-## 1. Использовать [strings.Clone](https://pkg.go.dev/strings#Clone)
+## Использовать [strings.Clone](https://pkg.go.dev/strings#Clone)
 
 ```go
 var justString string
@@ -42,7 +42,7 @@ func main() {
 }
 ```
 
-## 3. Использовать массив байт для новой строки
+## Использовать массив байт для новой строки
 
 ```go
 var justString string
@@ -57,7 +57,7 @@ func main() {
 }
 ```
 
-## 4. Использовать массив рун для новой строки
+## Использовать массив рун для новой строки
 
 ```go
 var justString string
