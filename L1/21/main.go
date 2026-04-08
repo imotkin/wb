@@ -37,7 +37,7 @@ func (a Adapter) First() int {
 }
 
 func Print(c Container) {
-	fmt.Printf("first -> %d", c.First())
+	fmt.Printf("first -> %d\n", c.First())
 }
 
 func main() {
